@@ -285,15 +285,26 @@ select.sp-input { appearance: none; cursor: pointer; }
     flex-shrink: 0;
     border-bottom: 1px solid var(--sp-divider);
     
-    /* Mở khóa tính năng cuộn ngang */
+    /* Bật tính năng cuộn ngang */
     overflow-x : auto;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    /* Tăng một chút khoảng không bên dưới để chứa thanh cuộn */
+    padding-bottom: 12px; 
 }
-.sp-tab-bar::-webkit-scrollbar { display: none; }
+
+/* Trang trí thanh cuộn ngang mỏng gọn, đẹp mắt */
+.sp-tab-bar::-webkit-scrollbar { 
+    height: 6px; 
+}
+.sp-tab-bar::-webkit-scrollbar-thumb { 
+    background: var(--sp-divider); 
+    border-radius: 3px; 
+}
+.sp-tab-bar::-webkit-scrollbar-track {
+    background: transparent;
+}
 
 .sp-tab {
-    flex           : 0 0 auto; /* Đảm bảo Tab không bị bóp nghẹt khi có nhiều Tab */
+    flex           : 0 0 auto; /* Đảm bảo Tab không bao giờ bị bóp nghẹt */
     display        : flex;
     flex-direction : column;
     align-items    : center;
