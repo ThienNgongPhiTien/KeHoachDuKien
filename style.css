@@ -149,15 +149,15 @@ select.sp-input { appearance: none; cursor: pointer; }
 }
 .sp-api-notice i { margin-top: 1px; flex-shrink: 0; }
 
-/* ─── Settings panel ─────────────────────────────────────────────────────────── */
+/* ─── Settings panel (Scene Mode) ────────────────────────────────────────────── */
 .sp-settings-panel {
-    flex-shrink   : 0;
+    flex          : 1;
     display       : flex;
     flex-direction: column;
     gap           : 8px;
-    padding       : 14px 16px;
-    border-bottom : 1px solid var(--sp-divider);
+    padding       : 14px 16px 20px;
     background    : var(--sp-surface);
+    overflow-y    : auto;
 }
 .sp-cfg-hint { font-size: 0.75rem; color: var(--sp-subtle); margin: 0 0 2px; }
 .sp-key-row  { display: flex; gap: 6px; }
@@ -545,6 +545,10 @@ select.sp-input { appearance: none; cursor: pointer; }
 .sp-toast-error { background: #4e2020; color: #ffb3b3; }
 
 /* ─── FAB ────────────────────────────────────────────────────────────────────── */
+/* Use top+dvh to work around html{-webkit-transform:translateZ(0)} on ST,
+   which makes html the containing block for fixed children and collapses its
+   height to 0 on mobile (body:fixed), causing bottom-anchored elements to
+   appear above the viewport. */
 #sp-fab {
     position: fixed;
     top     : calc(100dvh - 80px - 44px);
@@ -609,11 +613,14 @@ select.sp-input { appearance: none; cursor: pointer; }
 
 /* ─── Mobile: floating panel (same as desktop, touch-draggable) ──────────────── */
 @media (max-width: 640px) {
+    /* Mobile open animation — must include translateX(-50%) so fill-mode:both
+       doesn't clobber the centering transform when the animation freezes */
     @keyframes sp-sheet-in-mobile {
         from { transform: translateX(-50%) scale(0.92) translateY(10px); opacity: 0; }
         to   { transform: translateX(-50%) scale(1)    translateY(0);    opacity: 1; }
     }
 
+    /* Root is a full-screen pass-through — sheet floats freely inside */
     .sp-root {
         position       : fixed;
         top            : 0;
@@ -625,8 +632,10 @@ select.sp-input { appearance: none; cursor: pointer; }
         pointer-events : none;
     }
 
+    /* No dimmed backdrop — tapping outside passes through to ST */
     .sp-backdrop { display: none; }
 
+    /* Sheet floats centered, same rounding as desktop, touch-draggable */
     .sp-sheet {
         position        : fixed;
         top             : 70px;
@@ -643,6 +652,7 @@ select.sp-input { appearance: none; cursor: pointer; }
     }
 
     .sp-topbar        { cursor: grab; }
+    /* Resize handle visible on mobile — touch-action:none so touch drag isn't intercepted */
     .sp-resize-handle { display: flex; touch-action: none; }
 
     #sp-fab {
