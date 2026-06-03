@@ -1,7 +1,7 @@
 {
     "display_name": "Lịch Trình Dự Kiến",
     "name": "schedule-planner",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "description": "Tạo kế hoạch hành động và lịch trình dự kiến ngắn hạn và dài hạn (ngày/tháng/năm) dựa trên bối cảnh hội thoại hiện tại. Hỗ trợ tùy chỉnh ý tưởng, gộp lệnh sự kiện, chỉnh sửa trực tiếp và quản lý bản nháp có đặt tên.",
     "js": "index.js",
     "css": "style.css",
