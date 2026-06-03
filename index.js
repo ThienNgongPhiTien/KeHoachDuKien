@@ -1121,7 +1121,50 @@ function parseCalendar(raw) {
     const days = []; let cur = null;
     for (const line of content.split('\n')) {
         const t = line.trim();
-        if (!t || t.startsWith('<div style="position: absolute; top: 10px; right: 16px; display:flex; flex-direction:column; align-items:center;">
+        if (!t || t.startsWith('<!--')) continue;
+        
+        // Hỗ trợ parse định dạng Mốc thời gian mới (Tháng, Giai đoạn, Ngày...)
+        if (/^Day\s*:?/i.test(t) || /^第[一二三四五六七\d]+/.test(t) || /^Giai đoạn/i.test(t) || /^Tháng/i.test(t)) {
+            if (cur) days.push(cur); 
+            // Lưu lại label của mốc thời gian thay vì chỉ lưu event
+            cur = { label: t.replace(/^Day\s*:\s*/i, ''), events: [] }; 
+            continue;
+        }
+        
+        if (/^Event\s*:/i.test(t)) {
+            if (!cur) cur = { label: '1', events: [] };
+            const parts = t.replace(/^Event\s*:\s*/i, '').split('|');
+            if (parts.length >= 4) cur.events.push({
+                type: (parts[0]||'user').trim().toLowerCase(), 
+                title: (parts[1]||'').trim(),
+                desc: (parts[2]||'').trim(), 
+                time: (parts[3]||'').trim(),
+                location: (parts[4]||'').trim(), 
+                npcAction: (parts[5]||'').trim(),
+                riskTag: (parts[6]||'').trim()
+            });
+        }
+    }
+    if (cur) days.push(cur);
+    return { days: days.filter(d => d.events.length > 0), startDate };
+}
+
+function renderEvent(ev, dayIndex, evIdx, startDate) {
+    const evId = `spev-${dayIndex}-${evIdx}`;
+    eventDataMap.set(evId, { ev, dayIndex, startDate });
+    const meta = TYPE_META[ev.type] || TYPE_META.user;
+    
+    // Giữ nguyên các thẻ xuống dòng nếu có
+    const formattedDesc = escapeHtml(ev.desc).replace(/(\n|\\n)/g, '<br>');
+
+    return `<div class="sp-event ${meta.cls}" data-ev-id="${evId}" style="position: relative;">
+        <div class="sp-event-head">
+            <span class="sp-type-badge"><i class="fa-solid ${meta.icon}"></i>${escapeHtml(meta.label)}</span>
+            <span class="sp-event-title sp-editable" contenteditable="true" data-field="title">${escapeHtml(ev.title)}</span>
+            ${ev.time ? `<span class="sp-event-time sp-editable" contenteditable="true" data-field="time"><i class="fa-regular fa-clock"></i> ${escapeHtml(ev.time)}</span>` : ''}
+        </div>
+
+        <div style="position: absolute; top: 10px; right: 16px; display:flex; flex-direction:column; align-items:center;">
             <label style="font-size:0.6rem; color:var(--sp-subtle); margin-bottom:2px; cursor:pointer;">Duyệt</label>
             <input type="checkbox" class="sp-event-checkbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #66bb6a;">
         </div>
