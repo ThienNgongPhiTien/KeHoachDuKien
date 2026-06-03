@@ -123,7 +123,7 @@ function injectExtButton() {
     const html = `
         <div id="${PLUGIN_ID}-settings" class="inline-drawer">
             <div class="inline-drawer-toggle inline-drawer-header">
-                <b>Kế hoạch hành động 7 ngày</b>
+                <b>Kế hoạch hành động</b>
                 <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
             </div>
             <div class="inline-drawer-content">
@@ -259,6 +259,10 @@ function onFabDragEnd() {
 function injectModal() {
     const cfg = loadCfg();
     const hasCustomApi = !!(cfg.url && cfg.key);
+    
+    // Thiết lập font size hiển thị mặc định là 13 nếu chưa có cài đặt
+    const savedFontSize = cfg.fontSize || 13;
+
     const html = `
         <div id="${MODAL_ID}" class="sp-root sp-${currentTheme}" style="display:none;position:fixed;z-index:2000001">
             <div class="sp-backdrop"></div>
@@ -306,10 +310,22 @@ function injectModal() {
                         <span class="sp-stream-label">Streaming</span>
                         <span class="sp-stream-hint">Nhận phản hồi dần dần, nhanh hơn với model chậm</span>
                     </label>
+
+                    <p class="sp-cfg-hint" style="margin-top:8px;">Kích thước hiển thị nội dung (Mặc định: 13)</p>
+                    <div class="sp-font-size-row">
+                        <i class="fa-solid fa-a" style="font-size: 0.7rem; color: var(--sp-subtle);"></i>
+                        <input type="range" id="sp-cfg-fontsize" min="11" max="18" value="${savedFontSize}" step="0.5">
+                        <i class="fa-solid fa-a" style="font-size: 1rem; color: var(--sp-subtle);"></i>
+                        <span id="sp-fontsize-val" class="sp-font-size-val">${savedFontSize}</span>
+                    </div>
+
                     <p class="sp-cfg-hint" style="margin-top:8px;">Prompt Template (Tùy chỉnh hệ thống prompt)</p>
                     <textarea id="sp-cfg-prompt" class="sp-input" style="height: 120px; resize: vertical;" placeholder="Template mặc định...">${escapeHtml(cfg.promptTpl || DEFAULT_PROMPT_TPL)}</textarea>
                     
-                    <button id="sp-cfg-save" class="sp-save-btn" style="margin-top: 8px;"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>
+                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                        <button id="sp-cfg-save" class="sp-save-btn"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>
+                        <button id="sp-cfg-reset" class="sp-view-btn" style="color: #cf6679; border: 1px solid rgba(207, 102, 121, 0.4);"><i class="fa-solid fa-rotate-left"></i> Đặt lại</button>
+                    </div>
                     <span id="sp-cfg-msg" class="sp-cfg-msg"></span>
                 </div>
 
@@ -323,6 +339,13 @@ function injectModal() {
             </div>
         </div>`;
     document.documentElement.insertAdjacentHTML('beforeend', html);
+
+    // Áp dụng ngay biến Font Size bằng CSS sau khi chèn HTML
+    const rootEl = document.querySelector(`#${MODAL_ID}`);
+    if (rootEl) {
+        rootEl.style.setProperty('--sp-content-font-size', `${savedFontSize / 16}rem`);
+        rootEl.style.setProperty('--sp-title-font-size', `${(parseFloat(savedFontSize) + 1) / 16}rem`);
+    }
 
     if (cfg.key) $('#sp-cfg-key').val(maskKey(cfg.key)).data('real', cfg.key);
 
@@ -359,12 +382,44 @@ function injectModal() {
         .on('focus', () => { const r = $('#sp-cfg-key').data('real'); if (r) $('#sp-cfg-key').val(r); })
         .on('blur',  () => { const r = $('#sp-cfg-key').data('real') || $('#sp-cfg-key').val(); if (r) $('#sp-cfg-key').data('real', r).val(maskKey(r)); });
 
+    // Handle Font Size Range change (Live Preview)
+    $('#sp-cfg-fontsize').on('input', function() {
+        const val = $(this).val();
+        $('#sp-fontsize-val').text(val);
+        const root = document.querySelector(`#${MODAL_ID}`);
+        if(root) {
+            root.style.setProperty('--sp-content-font-size', `${val / 16}rem`);
+            root.style.setProperty('--sp-title-font-size', `${(parseFloat(val) + 1) / 16}rem`);
+        }
+    });
+
+    // Handle Reset Button Click
+    $('#sp-cfg-reset').on('click', function() {
+        if (confirm("Bạn có chắc chắn muốn khôi phục các cài đặt (Font chữ...) về mặc định không?")) {
+            const resetPrompt = confirm("Bạn có muốn đặt lại cả mẫu Prompt (Prompt Template) về nguyên bản không?");
+            
+            // Reset Font Size UI to default 13
+            $('#sp-cfg-fontsize').val(13).trigger('input');
+            
+            // Reset Prompt UI if user agreed
+            if (resetPrompt) {
+                $('#sp-cfg-prompt').val(DEFAULT_PROMPT_TPL);
+            }
+            
+            // Auto save immediately
+            saveSettings();
+            showToast("Đã khôi phục cài đặt mặc định!");
+        }
+    });
+
     $('#sp-body').on('click', '.sp-tab', function () {
         const idx = parseInt($(this).data('day'));
+        // Sử dụng parent().children().length để lấy TỔNG SỐ TAB thực tế linh hoạt
         const totalTabs = $(this).parent().children('.sp-tab').length;
         
         $('.sp-tab').removeClass('sp-tab-active');
         $(this).addClass('sp-tab-active');
+        // Trượt layout theo tỷ lệ tổng số tab
         $('.sp-days-track').css('transform', `translateX(-${idx * 100 / totalTabs}%)`);
     });
 
@@ -883,7 +938,8 @@ function saveSettings() {
         key, 
         model: $('#sp-cfg-model').val().trim(), 
         stream: $('#sp-cfg-stream').prop('checked'),
-        promptTpl: $('#sp-cfg-prompt').val()
+        promptTpl: $('#sp-cfg-prompt').val(),
+        fontSize: $('#sp-cfg-fontsize').val()
     });
     $k.data('real', key).val(maskKey(key)).attr('type', 'password');
     const $m = $('#sp-cfg-msg'); $m.text('Đã lưu ✓'); setTimeout(() => $m.text(''), 2000);
