@@ -39,6 +39,10 @@
     position  : fixed;
     z-index   : 2000001;
     font-family: 'Roboto', system-ui, sans-serif;
+    
+    /* Thiết lập biến Font chữ mặc định để JS can thiệp */
+    --sp-title-font-size: 0.88rem;   /* Mặc định: 0.88rem (~14px) */
+    --sp-content-font-size: 0.82rem; /* Mặc định: 0.82rem (~13px) */
 }
 
 .sp-backdrop { display: none; }
@@ -199,7 +203,7 @@ select.sp-input { appearance: none; cursor: pointer; }
 .sp-save-btn:hover { opacity: 0.88; }
 .sp-cfg-msg { font-size: 0.78rem; color: var(--sp-subtle); align-self: center; }
 
-/* ─── Streaming toggle ───────────────────────────────────────────────────────── */
+/* ─── Streaming toggle & Font Size row ───────────────────────────────────────── */
 .sp-stream-row {
     display    : flex;
     align-items: center;
@@ -211,6 +215,24 @@ select.sp-input { appearance: none; cursor: pointer; }
 .sp-stream-row input[type="checkbox"] { cursor: pointer; accent-color: var(--sp-primary); width: 15px; height: 15px; flex-shrink: 0; }
 .sp-stream-label { font-size: 0.85rem; color: var(--sp-on-surface); font-weight: 500; }
 .sp-stream-hint  { font-size: 0.75rem; color: var(--sp-subtle); }
+
+.sp-font-size-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+.sp-font-size-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--sp-primary);
+}
+.sp-font-size-val {
+    font-size: 0.85rem;
+    color: var(--sp-on-surface);
+    font-weight: 500;
+    width: 30px;
+    text-align: right;
+}
 
 /* ─── Extensions panel row ───────────────────────────────────────────────────── */
 .sp-ext-row {
@@ -268,9 +290,8 @@ select.sp-input { appearance: none; cursor: pointer; }
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
 }
-.sp-tab-bar::-webkit-scrollbar { 
-    display: none; /* Chrome/Safari */
-}
+.sp-tab-bar::-webkit-scrollbar { display: none; }
+
 .sp-tab {
     flex           : 1 0 auto;
     display        : flex;
@@ -383,15 +404,14 @@ select.sp-input { appearance: none; cursor: pointer; }
 .sp-type-user      .sp-type-badge { background: rgba(208,188,255,0.15); color: var(--sp-primary); }
 .sp-type-character .sp-type-badge { background: rgba(244,143,177,0.15); color: #f48fb1; }
 
-.sp-event-title { font-size: 0.88rem; font-weight: 500; color: var(--sp-on-surface); flex: 1; }
+.sp-event-title { font-size: var(--sp-title-font-size); font-weight: 500; color: var(--sp-on-surface); flex: 1; transition: font-size 0.2s; }
 .sp-event-time  { font-family: 'Roboto Mono', monospace; font-size: 0.73rem; color: var(--sp-subtle); flex-shrink: 0; }
 
 /* Thêm padding-right 45px và pre-wrap để ngắt dòng Mục tiêu - Kế hoạch */
-.sp-event-desc  { font-size: 0.82rem; color: var(--sp-on-surface); opacity: 0.8; line-height: 1.55; margin: 3px 0 5px; padding-right: 45px; white-space: pre-wrap; }
-.sp-event-desc strong { color: var(--sp-on-surface); opacity: 0.95; }
-.sp-event-meta  { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.sp-event-desc  { font-size: var(--sp-content-font-size); color: var(--sp-on-surface); opacity: 0.8; line-height: 1.55; margin: 3px 0 5px; padding-right: 45px; white-space: pre-wrap; transition: font-size 0.2s; }
+.sp-event-meta  { display: flex; flex-wrap: wrap; gap: 8px; }
 .sp-event-loc,
-.sp-event-npc   { font-size: 0.72rem; color: var(--sp-subtle); display: flex; align-items: center; gap: 3px; line-height: 1.4; }
+.sp-event-npc   { font-size: calc(var(--sp-content-font-size) - 0.1rem); color: var(--sp-subtle); display: flex; align-items: center; gap: 3px; line-height: 1.4; transition: font-size 0.2s; }
 .sp-event-npc   { font-style: italic; }
 
 /* Live Edit Styles */
@@ -525,10 +545,6 @@ select.sp-input { appearance: none; cursor: pointer; }
 .sp-toast-error { background: #4e2020; color: #ffb3b3; }
 
 /* ─── FAB ────────────────────────────────────────────────────────────────────── */
-/* Use top+dvh to work around html{-webkit-transform:translateZ(0)} on ST,
-   which makes html the containing block for fixed children and collapses its
-   height to 0 on mobile (body:fixed), causing bottom-anchored elements to
-   appear above the viewport. */
 #sp-fab {
     position: fixed;
     top     : calc(100dvh - 80px - 44px);
@@ -593,14 +609,11 @@ select.sp-input { appearance: none; cursor: pointer; }
 
 /* ─── Mobile: floating panel (same as desktop, touch-draggable) ──────────────── */
 @media (max-width: 640px) {
-    /* Mobile open animation — must include translateX(-50%) so fill-mode:both
-       doesn't clobber the centering transform when the animation freezes */
     @keyframes sp-sheet-in-mobile {
         from { transform: translateX(-50%) scale(0.92) translateY(10px); opacity: 0; }
         to   { transform: translateX(-50%) scale(1)    translateY(0);    opacity: 1; }
     }
 
-    /* Root is a full-screen pass-through — sheet floats freely inside */
     .sp-root {
         position       : fixed;
         top            : 0;
@@ -612,10 +625,8 @@ select.sp-input { appearance: none; cursor: pointer; }
         pointer-events : none;
     }
 
-    /* No dimmed backdrop — tapping outside passes through to ST */
     .sp-backdrop { display: none; }
 
-    /* Sheet floats centered, same rounding as desktop, touch-draggable */
     .sp-sheet {
         position        : fixed;
         top             : 70px;
@@ -632,7 +643,6 @@ select.sp-input { appearance: none; cursor: pointer; }
     }
 
     .sp-topbar        { cursor: grab; }
-    /* Resize handle visible on mobile — touch-action:none so touch drag isn't intercepted */
     .sp-resize-handle { display: flex; touch-action: none; }
 
     #sp-fab {
