@@ -264,26 +264,34 @@ select.sp-input { appearance: none; cursor: pointer; }
     gap        : 5px;
     flex-shrink: 0;
     border-bottom: 1px solid var(--sp-divider);
+    overflow-x : auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+.sp-tab-bar::-webkit-scrollbar { 
+    display: none; /* Chrome/Safari */
 }
 .sp-tab {
-    flex           : 1;
+    flex           : 1 0 auto;
     display        : flex;
     flex-direction : column;
     align-items    : center;
+    justify-content: center;
     gap            : 2px;
-    padding        : 5px 1px;
+    padding        : 6px 4px;
     background     : transparent;
     border         : 1px solid var(--sp-divider);
     border-radius  : 8px;
     cursor         : pointer;
     color          : var(--sp-subtle);
     transition     : background 0.12s, color 0.12s, border-color 0.12s;
-    min-width      : 0;
+    min-width      : 65px;
+    max-width      : 120px;
     overflow       : hidden;
 }
 .sp-tab:hover      { background: var(--sp-surface-high); color: var(--sp-on-surface); }
 .sp-tab-active     { background: var(--sp-chip-bg) !important; color: var(--sp-primary) !important; border-color: var(--sp-primary) !important; }
-.sp-tab-num        { font-family: 'Roboto Mono', monospace; font-size: 0.65rem; font-weight: 500; line-height: 1; white-space: nowrap; }
+.sp-tab-num        { font-family: 'Roboto', system-ui, sans-serif; font-size: 0.72rem; font-weight: 500; line-height: 1.3; white-space: normal; text-align: center; word-break: break-word; }
 .sp-tab-wd         { font-size: 0.60rem; opacity: 0.8; line-height: 1; }
 
 /* ─── Days sliding track ─────────────────────────────────────────────────────── */
@@ -380,7 +388,8 @@ select.sp-input { appearance: none; cursor: pointer; }
 
 /* Thêm padding-right 45px và pre-wrap để ngắt dòng Mục tiêu - Kế hoạch */
 .sp-event-desc  { font-size: 0.82rem; color: var(--sp-on-surface); opacity: 0.8; line-height: 1.55; margin: 3px 0 5px; padding-right: 45px; white-space: pre-wrap; }
-.sp-event-meta  { display: flex; flex-wrap: wrap; gap: 8px; }
+.sp-event-desc strong { color: var(--sp-on-surface); opacity: 0.95; }
+.sp-event-meta  { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .sp-event-loc,
 .sp-event-npc   { font-size: 0.72rem; color: var(--sp-subtle); display: flex; align-items: center; gap: 3px; line-height: 1.4; }
 .sp-event-npc   { font-style: italic; }
