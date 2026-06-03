@@ -89,33 +89,31 @@ function fabEnabled() { return localStorage.getItem(FAB_KEY) !== 'false'; }
 const DEFAULT_PROMPT_TPL = `Vui lòng tạm dừng nhập vai, hãy hoàn thành nhiệm vụ sau với tư cách là trợ lý lập kế hoạch (nội dung chỉ mang tính tham khảo, không xuất hiện trong văn bản chính):
 【Quan trọng】Bất kể cốt truyện sử dụng ngôn ngữ nào, tất cả nội dung đầu ra phải sử dụng tiếng Việt (tên người, địa danh có thể giữ nguyên bản gốc).
 
-Dựa trên bối cảnh cốt truyện và thiết lập thế giới, hãy lập kế hoạch dự kiến cho {{days}} tới cho {{subject}}.
+Dựa trên bối cảnh cốt truyện và thiết lập thế giới, hãy lập kế hoạch dự kiến cho khoảng thời gian [{{days}}] tới cho {{subject}}.
 Ý tưởng chủ đạo: {{mainIdea}}
 
 【Quy tắc cụ thể】
-1. Phân bổ Giai đoạn & Ước lượng thời gian:
-   - Nếu là kế hoạch ngắn hạn (Ngày): Chia theo Ngày (VD: Day: Ngày 1, Day: Ngày 2).
-   - Nếu là kế hoạch dài hạn (Tháng/Năm): Chia thành các Giai đoạn vĩ mô VÀ BẮT BUỘC ghi rõ ước lượng thời gian (VD: Day: Giai đoạn 1 (Năm 1-2) hoặc Day: Giai đoạn 1 (Tháng 1-3)).
-2. Mật độ sự kiện: BẮT BUỘC sắp xếp từ 2 đến 5 sự kiện nhỏ/chi tiết cho MỖI Ngày hoặc MỖI Giai đoạn. Tuyệt đối không được viết gộp 1 sự kiện duy nhất cho cả một giai đoạn dài hạn.
+1. Phân bổ Cột mốc & Ước lượng thời gian:
+   - Nếu khoảng thời gian là Ngày hoặc Tháng (Ngắn/Trung hạn): BẮT BUỘC liệt kê chi tiết TỪNG mốc một (VD: Day: Ngày 1, Day: Ngày 2... hoặc Day: Tháng 1, Day: Tháng 2...). Số lượng mốc phải bằng với con số được yêu cầu.
+   - Nếu khoảng thời gian là Năm (Dài hạn): AI TỰ ĐỘNG PHÂN TÍCH và chia nhỏ toàn bộ khoảng thời gian đó thành các "Giai đoạn" vĩ mô. Số lượng Giai đoạn hoàn toàn linh hoạt (có thể là 2, 4, 6... tùy vào độ phức tạp của kế hoạch). ĐẶC BIỆT chú ý, BẮT BUỘC phải kèm theo ước lượng thời gian trong ngoặc đơn ngay sau tên Giai đoạn (VD: Day: Giai đoạn 1 (Năm 1-2), Day: Giai đoạn 2 (Năm 3-5)).
+2. Mật độ sự kiện: BẮT BUỘC sắp xếp từ 2 đến 5 sự kiện nhỏ/chi tiết cho MỖI Cột mốc thời gian (Ngày/Tháng/Giai đoạn). Tuyệt đối không được viết gộp chung 1 sự kiện duy nhất.
 3. Quy chuẩn trường dữ liệu (mỗi dòng một Event):
    Định dạng: Event: type|title|description|time|location|npc_action|risk_tag
    - type: world / major / user / character
    - title: Tiêu đề sự kiện ngắn gọn.
-   - description: Hành động cụ thể của {{subject}}. BẮT BUỘC phải bắt đầu bằng 2 từ khóa "Mục tiêu:" và "Kế hoạch:" (VD: "Mục tiêu: Đột phá cảnh giới. Kế hoạch: Bế quan trong động phủ...").
-   - time: Thời điểm cụ thể diễn ra sự kiện này (VD: Nếu là ngày thì ghi "Sáng", "Tối". Nếu là giai đoạn thì ghi "Năm thứ 1", "Tháng thứ 2", "Suốt giai đoạn").
+   - description: Hành động cụ thể của {{subject}}. BẮT BUỘC phải bắt đầu bằng 2 từ khóa "Mục tiêu:" và "Kế hoạch:" (VD: "Mục tiêu: Đột phá. Kế hoạch: Bế quan trong động phủ...").
+   - time: Thời điểm cụ thể diễn ra sự kiện này (Sáng/Tối, Năm thứ 2, Nửa cuối năm...).
    - location: Nơi diễn ra sự kiện.
    - npc_action: Động thái, âm mưu hoặc hỗ trợ từ {{companion}} (NPC).
-   - risk_tag: Thẻ đánh giá rủi ro ngắn gọn (VD: [An toàn], [Cửu tử nhất sinh]).
+   - risk_tag: Thẻ đánh giá rủi ro ngắn gọn (VD: [An toàn]).
 
 【Định dạng đầu ra (tuân thủ nghiêm ngặt, chỉ xuất ra cấu trúc sau)】
 <calendar_widget>
-StartDate: YYYY-MM-DD (Nếu không thể xác định mốc thời gian hiện tại thì bỏ qua dòng này)
-Day: Ngày 1 (hoặc VD: Giai đoạn 1 (Năm 1-2))
+StartDate: YYYY-MM-DD (Nếu không xác định được mốc thời gian hiện tại thì bỏ qua dòng này)
+Day: Ngày 1 (hoặc Tháng 1, hoặc Giai đoạn 1 (Năm 1-2))
 Event: type|title|description|time|location|npc_action|risk_tag
 Event: type|title|description|time|location|npc_action|risk_tag
-Event: type|title|description|time|location|npc_action|risk_tag
-Day: Ngày 2 (hoặc VD: Giai đoạn 2 (Năm 3-5))
-Event: type|title|description|time|location|npc_action|risk_tag
+Day: Ngày 2 (hoặc Tháng 2, hoặc Giai đoạn 2 (Năm 3-5))
 Event: type|title|description|time|location|npc_action|risk_tag
 </calendar_widget>`;
 
@@ -363,9 +361,11 @@ function injectModal() {
 
     $('#sp-body').on('click', '.sp-tab', function () {
         const idx = parseInt($(this).data('day'));
+        const totalTabs = $(this).parent().children('.sp-tab').length;
+        
         $('.sp-tab').removeClass('sp-tab-active');
         $(this).addClass('sp-tab-active');
-        $('.sp-days-track').css('transform', `translateX(-${idx * 100 / 7}%)`);
+        $('.sp-days-track').css('transform', `translateX(-${idx * 100 / totalTabs}%)`);
     });
 
     // Handle check box click
@@ -1088,21 +1088,32 @@ function renderSchedule(raw, userName) {
 
     const tabs = days.map((day, i) => {
         let numLabel = day.label || String(i + 1);
+        let tooltip = '';
+        
+        // Tách thời gian ước lượng (VD: Năm 1-2) ẩn vào tooltip để làm gọn Tab
+        const match = numLabel.match(/(.*?)\s*\((.*?)\)/);
+        if (match) {
+            numLabel = match[1].trim();
+            tooltip = match[2].trim();
+        }
+
         let wdLabel = '';
-        if (startDate && !day.label.match(/[a-zA-Z]/)) { // Chỉ format thứ nếu là số ngày thuần túy
+        // Bỏ qua định dạng Ngày/Tháng nếu là mốc đặc biệt "Giai đoạn..."
+        if (startDate && (/^\d+$/.test(day.label) || /^Ngày\s*\d+/i.test(day.label))) { 
             const d = new Date(startDate);
             d.setDate(d.getDate() + i);
             wdLabel  = WEEKDAYS[d.getDay()];
             numLabel = `${d.getDate()}/${d.getMonth() + 1}`; 
         }
-        return `<button class="sp-tab${i === 0 ? ' sp-tab-active' : ''}" data-day="${i}">
+        
+        return `<button class="sp-tab${i === 0 ? ' sp-tab-active' : ''}" data-day="${i}" ${tooltip ? `data-sp-tooltip="${escapeAttr(tooltip)}"` : ''}>
             <span class="sp-tab-num" style="white-space: normal; line-height: 1.2;">${escapeHtml(numLabel)}</span>
             ${wdLabel ? `<span class="sp-tab-wd">${wdLabel}</span>` : ''}
         </button>`;
     }).join('');
 
     const panels = days.map((day, dayIndex) =>
-        `<div class="sp-day-panel" style="width: calc(100% / ${days.length}); padding-bottom: 60px;">${day.events.map((ev, evIdx) => renderEvent(ev, dayIndex, evIdx, startDate)).join('')}</div>`
+        `<div class="sp-day-panel" style="width: calc(100% / ${days.length}); padding-bottom: 60px;">${day.events.map((ev, evIdx) => renderEvent(ev, dayIndex, evIdx, startDate, day.label)).join('')}</div>`
     ).join('');
 
     const mergeBar = `
@@ -1138,10 +1149,11 @@ function parseCalendar(raw) {
     const days = []; let cur = null;
     for (const line of content.split('\n')) {
         const t = line.trim();
-        if (!t || t.startsWith('<!--')) continue;
+        // Sửa lỗi markdown bị ẩn do token chú thích HTML
+        if (!t || t.startsWith('<' + '!--')) continue; 
         
-        // Hỗ trợ parse định dạng Mốc thời gian mới (Tháng, Giai đoạn, Ngày...)
-        if (/^Day\s*:?/i.test(t) || /^第[一二三四五六七\d]+/.test(t) || /^Giai đoạn/i.test(t) || /^Tháng/i.test(t)) {
+        // Hỗ trợ parse định dạng Mốc thời gian mới (Ngày, Tháng, Giai đoạn...)
+        if (/^Day\s*:?/i.test(t) || /^第[一二三四五六七\d]+/.test(t) || /^Giai đoạn/i.test(t) || /^Tháng/i.test(t) || /^Ngày/i.test(t)) {
             if (cur) days.push(cur); 
             // Lưu lại label của mốc thời gian thay vì chỉ lưu event
             cur = { label: t.replace(/^Day\s*:\s*/i, ''), events: [] }; 
@@ -1166,9 +1178,10 @@ function parseCalendar(raw) {
     return { days: days.filter(d => d.events.length > 0), startDate };
 }
 
-function renderEvent(ev, dayIndex, evIdx, startDate) {
+function renderEvent(ev, dayIndex, evIdx, startDate, dayLabel) {
     const evId = `spev-${dayIndex}-${evIdx}`;
-    eventDataMap.set(evId, { ev, dayIndex, startDate });
+    // Lưu lại dayLabel nguyên bản (VD: Giai đoạn 1 (Năm 1-2)) để phục vụ tính năng Merge
+    eventDataMap.set(evId, { ev, dayIndex, startDate, dayLabel });
     const meta = TYPE_META[ev.type] || TYPE_META.user;
     
     // Giữ nguyên các thẻ xuống dòng nếu có, đồng thời tách dòng "Kế hoạch:" xuống
@@ -1202,8 +1215,8 @@ function formatEventsForSend(eventItems) {
     let combinedText = `[Chỉ thị Tối cao]: Đây là toàn bộ kế hoạch dự tính của ${currentView === 'char' ? 'NPC' : 'tôi'} cho giai đoạn tới, chúng ta sẽ bắt đầu thực hiện theo các kế hoạch này:\n\n`;
     
     eventItems.forEach((item, index) => {
-        const { ev, dayIndex } = item;
-        let dateLabel = ev.dayLabel || `Ngày ${dayIndex + 1}`;
+        const { ev, dayIndex, dayLabel } = item;
+        let dateLabel = dayLabel || ev.dayLabel || `Ngày ${dayIndex + 1}`;
         if (/^\d+$/.test(dateLabel)) dateLabel = `Ngày ${dateLabel}`; // Cố định prefix nếu chỉ là số
         
         const locPart = ev.location ? ` tại [${ev.location}]` : '';
