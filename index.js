@@ -281,7 +281,7 @@ function injectModal() {
                     </div>
                 </div>
 
-                <div id="sp-settings-panel" class="sp-settings-panel" style="display:none; overflow-y:auto; max-height:60vh;">
+                <div id="sp-settings-panel" class="sp-settings-panel" style="display:none; overflow-y:auto; flex: 1; padding-bottom: 20px;">
                     <div class="sp-api-notice ${hasCustomApi ? 'sp-notice-ok' : 'sp-notice-warn'}">
                         <i class="fa-solid ${hasCustomApi ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i>
                         ${hasCustomApi
@@ -423,7 +423,30 @@ function injectModal() {
         $('.sp-days-track').css('transform', `translateX(-${idx * 100 / totalTabs}%)`);
     });
 
-    // Handle check box click
+    // Xử lý Checkbox "Chọn tất cả sự kiện trong Tab"
+    $('#sp-body').on('change', '.sp-select-all-tab', function(e) {
+        const isChecked = this.checked;
+        const $panel = $(this).closest('.sp-day-panel');
+        
+        $panel.find('.sp-event-checkbox').each(function() {
+            if (this.checked !== isChecked) {
+                $(this).prop('checked', isChecked).trigger('change');
+            }
+        });
+    });
+
+    // Xử lý Checkbox "Chọn Toàn Bộ Kế Hoạch" (Merge Bar)
+    $('#sp-body').on('change', '#sp-select-all-plan', function(e) {
+        const isChecked = this.checked;
+        $('#sp-body').find('.sp-event-checkbox').each(function() {
+            if (this.checked !== isChecked) {
+                $(this).prop('checked', isChecked).trigger('change');
+            }
+        });
+        $('#sp-body').find('.sp-select-all-tab').prop('checked', isChecked);
+    });
+
+    // Handle check box click (Individual Event)
     $('#sp-body').on('change', '.sp-event-checkbox', function(e) {
         const evId = $(this).closest('.sp-event').data('ev-id');
         if (this.checked) {
@@ -433,6 +456,13 @@ function injectModal() {
             selectedEvents.delete(evId);
             $(this).closest('.sp-event').removeClass('sp-event-checked');
         }
+        
+        // Kiểm tra xem đã chọn đủ tất cả sự kiện trong Tab chưa để tự động tích ô "Select All Tab"
+        const $panel = $(this).closest('.sp-day-panel');
+        const totalInTab = $panel.find('.sp-event-checkbox').length;
+        const checkedInTab = $panel.find('.sp-event-checkbox:checked').length;
+        $panel.find('.sp-select-all-tab').prop('checked', totalInTab === checkedInTab && totalInTab > 0);
+        
         updateMergeBar();
     });
 
@@ -449,6 +479,7 @@ function injectModal() {
         selectedEvents.clear();
         $('.sp-event-checkbox').prop('checked', false);
         $('.sp-event').removeClass('sp-event-checked');
+        $('#sp-body').find('.sp-select-all-tab, #sp-select-all-plan').prop('checked', false);
         updateMergeBar();
     });
 
@@ -492,13 +523,17 @@ function injectModal() {
 }
 
 function updateMergeBar() {
-    const $bar = $('#sp-merge-bar');
+    const $btn = $('#sp-merge-send-btn');
+    $('#sp-merge-count').text(selectedEvents.size);
     if (selectedEvents.size > 0) {
-        $('#sp-merge-count').text(selectedEvents.size);
-        $bar.css({ transform: 'translateY(0)', opacity: 1, pointerEvents: 'auto' });
+        $btn.css({ opacity: 1, pointerEvents: 'auto' });
     } else {
-        $bar.css({ transform: 'translateY(100%)', opacity: 0, pointerEvents: 'none' });
+        $btn.css({ opacity: 0.5, pointerEvents: 'none' });
     }
+    
+    // Tự động kiểm tra và tích/bỏ tích nút "Chọn tất cả kế hoạch"
+    const total = $('#sp-body').find('.sp-event-checkbox').length;
+    $('#sp-select-all-plan').prop('checked', total === selectedEvents.size && total > 0);
 }
 
 // ─── View (Tôi / TA) ───────────────────────────────────────────────────────────
@@ -916,8 +951,16 @@ async function fetchModels() {
 
 function toggleSettings() {
     settingsOpen = !settingsOpen;
-    $('#sp-settings-panel').slideToggle(200);
     $(`#${MODAL_ID} .sp-settings-btn`).toggleClass('sp-btn-active', settingsOpen);
+    
+    // Scene mode: Ẩn body/lịch trình để cho bảng Cài đặt chiếm full không gian
+    if (settingsOpen) {
+        $('#sp-body').hide();
+        $('#sp-settings-panel').fadeIn(200);
+    } else {
+        $('#sp-settings-panel').hide();
+        $('#sp-body').fadeIn(200);
+    }
 }
 
 function toggleKeyVisibility() {
@@ -950,6 +993,8 @@ function saveSettings() {
         .html(`<i class="fa-solid ${hasApi ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i>
             ${hasApi ? 'Đã cấu hình API độc lập, tạo dưới nền không ảnh hưởng đến trò chuyện'
                      : 'Chưa cấu hình API độc lập: Trong quá trình tạo sẽ <b>chiếm dụng kênh trò chuyện</b>'}`);
+    
+    // Tự động đóng cài đặt sau khi lưu thành công
     setTimeout(() => { if (settingsOpen) toggleSettings(); }, 400);
 }
 
@@ -1168,19 +1213,39 @@ function renderSchedule(raw, userName) {
         </button>`;
     }).join('');
 
-    const panels = days.map((day, dayIndex) =>
-        `<div class="sp-day-panel" style="width: calc(100% / ${days.length}); padding-bottom: 60px;">${day.events.map((ev, evIdx) => renderEvent(ev, dayIndex, evIdx, startDate, day.label)).join('')}</div>`
-    ).join('');
+    const panels = days.map((day, dayIndex) => {
+        const tabLabelText = day.label || `Ngày ${dayIndex + 1}`;
+        // Nút chọn tất cả sự kiện trong Tab hiện tại
+        const selectAllTabHtml = `
+            <div style="padding: 8px 16px 4px; display: flex; justify-content: flex-end; align-items: center;">
+                <label data-sp-tooltip="Chọn tất cả sự kiện của ${escapeAttr(tabLabelText)}" style="display:flex; cursor:pointer;">
+                    <input type="checkbox" class="sp-select-all-tab" data-day="${dayIndex}" style="width:16px; height:16px; cursor:pointer; accent-color:#66bb6a;">
+                </label>
+            </div>
+        `;
+        
+        return `<div class="sp-day-panel" style="width: calc(100% / ${days.length}); padding-bottom: 60px;">
+            ${selectAllTabHtml}
+            ${day.events.map((ev, evIdx) => renderEvent(ev, dayIndex, evIdx, startDate, day.label)).join('')}
+        </div>`;
+    }).join('');
 
+    // Nút chọn toàn bộ Kế hoạch nằm ở Merge Bar (Luôn hiển thị)
     const mergeBar = `
         <div id="sp-merge-bar" style="
             position: absolute; bottom: 0; left: 0; right: 0; 
             background: var(--sp-surface-high); border-top: 1px solid var(--sp-divider);
             padding: 10px 16px; display: flex; justify-content: space-between; align-items: center;
-            transform: translateY(100%); opacity: 0; transition: transform 0.2s, opacity 0.2s;
-            pointer-events: none; z-index: 10; box-shadow: 0 -2px 10px rgba(0,0,0,0.2);">
-            <span style="font-size: 0.85rem; color: var(--sp-on-surface);"><span id="sp-merge-count">0</span> sự kiện</span>
-            <button id="sp-merge-send-btn" class="sp-send-btn"><i class="fa-solid fa-paper-plane"></i> Gửi lệnh gộp</button>
+            z-index: 10; box-shadow: 0 -2px 10px rgba(0,0,0,0.2);">
+            
+            <div style="display:flex; align-items:center; gap: 10px;">
+                <label data-sp-tooltip="Chọn toàn bộ sự kiện của tất cả các mốc" style="display:flex; cursor:pointer; margin:0;">
+                    <input type="checkbox" id="sp-select-all-plan" style="width:18px; height:18px; cursor: pointer; accent-color: #66bb6a;">
+                </label>
+                <span style="font-size: 0.85rem; color: var(--sp-on-surface);"><span id="sp-merge-count">0</span> sự kiện</span>
+            </div>
+            
+            <button id="sp-merge-send-btn" class="sp-send-btn" style="opacity: 0.5; pointer-events: none;"><i class="fa-solid fa-paper-plane"></i> Gửi lệnh gộp</button>
         </div>
     `;
 
