@@ -41,8 +41,8 @@
     font-family: 'Roboto', system-ui, sans-serif;
     
     /* Thiết lập biến Font chữ mặc định để JS can thiệp */
-    --sp-title-font-size: 0.88rem;   /* Mặc định: 0.88rem (~14px) */
-    --sp-content-font-size: 0.82rem; /* Mặc định: 0.82rem (~13px) */
+    --sp-title-font-size: 0.88rem;   
+    --sp-content-font-size: 0.82rem; 
 }
 
 .sp-backdrop { display: none; }
@@ -124,9 +124,7 @@
 .sp-fetch-btn:hover    { color: var(--sp-on-surface); border-color: var(--sp-primary); }
 .sp-fetch-btn:disabled { opacity: 0.5; cursor: default; }
 
-/* ─── Model select ───────────────────────────────────────────────────────────── */
 select.sp-input { appearance: none; cursor: pointer; }
-
 
 .sp-api-notice {
     display    : flex;
@@ -286,6 +284,8 @@ select.sp-input { appearance: none; cursor: pointer; }
     gap        : 5px;
     flex-shrink: 0;
     border-bottom: 1px solid var(--sp-divider);
+    
+    /* Mở khóa tính năng cuộn ngang */
     overflow-x : auto;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
@@ -293,26 +293,26 @@ select.sp-input { appearance: none; cursor: pointer; }
 .sp-tab-bar::-webkit-scrollbar { display: none; }
 
 .sp-tab {
-    flex           : 1 0 auto;
+    flex           : 0 0 auto; /* Đảm bảo Tab không bị bóp nghẹt khi có nhiều Tab */
     display        : flex;
     flex-direction : column;
     align-items    : center;
     justify-content: center;
     gap            : 2px;
-    padding        : 6px 4px;
+    padding        : 6px 8px;
     background     : transparent;
     border         : 1px solid var(--sp-divider);
     border-radius  : 8px;
     cursor         : pointer;
     color          : var(--sp-subtle);
     transition     : background 0.12s, color 0.12s, border-color 0.12s;
-    min-width      : 65px;
+    min-width      : 65px; /* Giữ kích thước tối thiểu cho mỗi Tab */
     max-width      : 120px;
     overflow       : hidden;
 }
 .sp-tab:hover      { background: var(--sp-surface-high); color: var(--sp-on-surface); }
 .sp-tab-active     { background: var(--sp-chip-bg) !important; color: var(--sp-primary) !important; border-color: var(--sp-primary) !important; }
-.sp-tab-num        { font-family: 'Roboto', system-ui, sans-serif; font-size: 0.72rem; font-weight: 500; line-height: 1.3; white-space: normal; text-align: center; word-break: break-word; }
+.sp-tab-num        { font-family: 'Roboto', system-ui, sans-serif; font-size: 0.75rem; font-weight: 500; line-height: 1.3; white-space: normal; text-align: center; word-break: break-word; }
 .sp-tab-wd         { font-size: 0.60rem; opacity: 0.8; line-height: 1; }
 
 /* ─── Days sliding track ─────────────────────────────────────────────────────── */
