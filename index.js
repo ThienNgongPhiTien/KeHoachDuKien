@@ -322,9 +322,10 @@ function injectModal() {
                     <p class="sp-cfg-hint" style="margin-top:8px;">Prompt Template (Tùy chỉnh hệ thống prompt)</p>
                     <textarea id="sp-cfg-prompt" class="sp-input" style="height: 120px; resize: vertical;" placeholder="Template mặc định...">${escapeHtml(cfg.promptTpl || DEFAULT_PROMPT_TPL)}</textarea>
                     
-                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
                         <button id="sp-cfg-save" class="sp-save-btn"><i class="fa-solid fa-floppy-disk"></i> Lưu</button>
                         <button id="sp-cfg-reset" class="sp-view-btn" style="color: #cf6679; border: 1px solid rgba(207, 102, 121, 0.4);"><i class="fa-solid fa-rotate-left"></i> Đặt lại</button>
+                        <button id="sp-cfg-clear-api" class="sp-view-btn" style="color: #ff9800; border: 1px solid rgba(255, 152, 0, 0.4);"><i class="fa-solid fa-eraser"></i> Xóa API</button>
                     </div>
                     <span id="sp-cfg-msg" class="sp-cfg-msg"></span>
                 </div>
@@ -420,6 +421,19 @@ function injectModal() {
             // Auto save immediately
             saveSettings();
             showToast("Đã khôi phục cài đặt mặc định!");
+        }
+    });
+    // Xử lý nút Xóa API
+    $('#sp-cfg-clear-api').on('click', function() {
+        if (confirm("Bạn có chắc chắn muốn xóa toàn bộ thông tin API (URL, Key, Model) không?")) {
+            // Làm trống các ô nhập liệu
+            $('#sp-cfg-url').val('');
+            $('#sp-cfg-key').val('').data('real', '');
+            $('#sp-cfg-model').val('');
+            
+            // Lưu lại cài đặt rỗng
+            saveSettings();
+            showToast("Đã xóa sạch dữ liệu API!");
         }
     });
 
