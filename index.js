@@ -379,8 +379,19 @@ function injectModal() {
     $('#sp-key-toggle').on('click',    toggleKeyVisibility);
     $('#sp-fetch-models').on('click',  fetchModels);
     $('#sp-cfg-key')
-        .on('focus', () => { const r = $('#sp-cfg-key').data('real'); if (r) $('#sp-cfg-key').val(r); })
-        .on('blur',  () => { const r = $('#sp-cfg-key').data('real') || $('#sp-cfg-key').val(); if (r) $('#sp-cfg-key').data('real', r).val(maskKey(r)); });
+        .on('focus', function() { 
+            const r = $(this).data('real'); 
+            if (r) $(this).val(r); 
+        })
+        .on('blur', function() { 
+            const currentVal = $(this).val().trim(); 
+            $(this).data('real', currentVal); 
+            if (currentVal && $(this).attr('type') === 'password') {
+                $(this).val(maskKey(currentVal)); 
+            } else if (!currentVal) {
+                $(this).val('');
+            }
+        });
 
     // Handle Font Size Range change (Live Preview)
     $('#sp-cfg-fontsize').on('input', function() {
@@ -966,16 +977,24 @@ function toggleSettings() {
 function toggleKeyVisibility() {
     const $el = $('#sp-cfg-key'), $icon = $('#sp-key-toggle i');
     if ($el.attr('type') === 'password') {
-        $el.attr('type', 'text').val($el.data('real') || $el.val());
+        $el.attr('type', 'text').val($el.data('real') || '');
         $icon.removeClass('fa-eye').addClass('fa-eye-slash');
     } else {
-        const r = $el.val(); $el.data('real', r).attr('type', 'password').val(maskKey(r));
+        const r = $el.val().trim();
+        $el.data('real', r).attr('type', 'password').val(r ? maskKey(r) : '');
         $icon.removeClass('fa-eye-slash').addClass('fa-eye');
     }
 }
 
 function saveSettings() {
-    const $k = $('#sp-cfg-key'), key = ($k.data('real') || $k.val()).trim();
+    const $k = $('#sp-cfg-key');
+    let key = $k.val().trim();
+    
+    // An toàn tuyệt đối: Nếu ô đang có dấu chấm, lấy key thật đằng sau
+    if ($k.attr('type') === 'password' && key.includes('•')) {
+        key = $k.data('real') || '';
+    }
+    
     saveCfg({ 
         url: $('#sp-cfg-url').val().trim().replace(/\/$/, ''), 
         key, 
@@ -984,7 +1003,9 @@ function saveSettings() {
         promptTpl: $('#sp-cfg-prompt').val(),
         fontSize: $('#sp-cfg-fontsize').val()
     });
-    $k.data('real', key).val(maskKey(key)).attr('type', 'password');
+    
+    $k.data('real', key).attr('type', 'password');
+    if (key) $k.val(maskKey(key)); else $k.val('');
     const $m = $('#sp-cfg-msg'); $m.text('Đã lưu ✓'); setTimeout(() => $m.text(''), 2000);
     const hasApi = !!(loadCfg().url && loadCfg().key);
     $('.sp-api-notice')
